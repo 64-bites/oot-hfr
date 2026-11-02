@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OoT HFR Patcher</title>
+<style>
+:root { --bg: #14171c; --panel: #1e232b; --text: #e8eaed; --muted: #a4abb6; --accent: #e0b84c; --ok: #7bc47f; --bad: #ef8a80; }
+@media (prefers-color-scheme: light) { :root { --bg: #f4f2ec; --panel: #ffffff; --text: #1d2125; --muted: #5a616b; --accent: #8a6a10; --ok: #2c7a33; --bad: #b3362a; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, sans-serif; }
+main { max-width: 560px; margin: 0 auto; padding: 32px 16px; }
+h1 { font-size: 26px; margin: 0 0 8px; }
+p { margin: 0 0 16px; }
+.muted { color: var(--muted); font-size: 14px; }
+.panel { background: var(--panel); border-radius: 10px; padding: 20px; margin: 20px 0; }
+label.pick { display: block; padding: 28px 12px; text-align: center; border: 2px dashed var(--muted); border-radius: 8px; cursor: pointer; font-weight: 600; }
+label.pick:focus-within, label.pick:hover { border-color: var(--accent); }
+input[type=file] { position: absolute; opacity: 0; width: 1px; height: 1px; }
+#status { min-height: 24px; margin: 16px 0 0; }
+#status.ok { color: var(--ok); }
+#status.bad { color: var(--bad); }
+ul { margin: 0; padding-left: 20px; }
+a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+<h1>OoT HFR Patcher</h1>
+<p>Runs Ocarina of Time at 20, up to 30 or up to 60 fps on N64 hardware, with game speed unchanged. You choose the rate in the pause menu.</p>
+<div class="panel">
+<label class="pick">Choose your USA 1.0 ROM (.z64, .n64 or .v64)<input type="file" id="rom" accept=".z64,.n64,.v64"></label>
+<div id="status" role="status">Your ROM stays on this computer. Nothing is uploaded.</div>
+</div>
+<div class="panel">
+<strong>You need</strong>
+<ul>
+<li>Your own ROM of the USA 1.0 version. No ROM comes with this patch.</li>
+<li>A flash cart or an emulator to run the result.</li>
+<li>An Expansion Pak for any rate above Standard. Without one, the game runs as Standard.</li>
+</ul>
+</div>
+<p class="muted">Rates depend on your console and the scene. The higher rates are for overclocked hardware. At stock speed, expect mostly 20 fps. This is a fan project, not affiliated with Nintendo. Patching uses <a href="vendor/LICENSE-RomPatcher">Rom Patcher JS modules</a>.</p>
+</main>
+<script src="vendor/HashCalculator.js"></script>
+<script src="vendor/BinFile.js"></script>
+<script src="vendor/RomPatcher.format.vcdiff.js"></script>
+<script src="hfr-config.js"></script>
+<script src="hfr-install.js"></script>
+<script>
+(function () {
+	const status = document.getElementById('status');
+	const show = function (text, kind) {
+		status.textContent = text;
+		status.className = kind || '';
+	};
+	const save = function (bytes, name) {
+		const url = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = name;
+		document.body.appendChild(a);
+		a.click();
+		a.remove();
+		setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+	};
+	// The single-file build holds the patch in the page
+	const loadPatch = async function () {
+		if (typeof HFR_PATCH_BASE64 === 'string') {
+			const text = atob(HFR_PATCH_BASE64);
+			const bytes = new Uint8Array(text.length);
+			for (let i = 0; i < text.length; i++)
+				bytes[i] = text.charCodeAt(i);
+			return bytes;
+		}
+		const response = await fetch('hfr.xdelta');
+		if (!response.ok)
+			throw new HfrInstall.InstallError('NO_PATCH', 'The patch file could not be loaded. Please try again.');
+		return new Uint8Array(await response.arrayBuffer());
+	};
+	document.getElementById('rom').addEventListener('change', async function (event) {
+		const file = event.target.files[0];
+
+		if (!file)
+			return;
+		show('Checking and patching. This takes a few seconds.');
+		await new Promise(function (resolve) { setTimeout(resolve, 30); });
+		try {
+			const romBytes = new Uint8Array(await file.arrayBuffer());
+			const patchBytes = await loadPatch();
+			const result = HfrInstall.install(romBytes, patchBytes, HFR_CONFIG.targetMd5, { BinFile, VCDIFF });
+
+			save(result.rom, HFR_CONFIG.outputName);
+			show('Done. Your browser saved ' + HFR_CONFIG.outputName + '. Your original file was not changed.', 'ok');
+		} catch (err) {
+			show(err instanceof HfrInstall.InstallError ? err.message : 'Something went wrong: ' + err.message, 'bad');
+		}
+	});
+})();
+</script>
+</body>
+</html>
