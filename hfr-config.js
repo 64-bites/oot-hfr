@@ -1,1 +1,1 @@
-const HFR_CONFIG = { targetMd5: '15fd4837ecb3da4104e84a9041e7be4b', outputName: 'OoT HFR.z64' };
+const HFR_CONFIG = { targetMd5: '0ee4a5956d3330b8e869e11dac76ecbe', outputName: 'OoT HFR.z64' };

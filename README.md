@@ -21,13 +21,13 @@ To use your own patcher, take the BPS file from the Releases page and apply it t
 
 ## Requirements
 
-- USA 1.0 ROM, MD5 `5bd1fe107bf8106b2ab6650abecd54d6` (`.z64` byte order). The patched ROM has MD5 `15fd4837ecb3da4104e84a9041e7be4b`.
+- USA 1.0 ROM, MD5 `5bd1fe107bf8106b2ab6650abecd54d6` (`.z64` byte order). The patched ROM has MD5 `0ee4a5956d3330b8e869e11dac76ecbe`.
 - An Expansion Pak for the settings below. Without one, the game runs as Standard with full anti-aliasing, and hides both settings.
 
 ## Settings
 
 - **Before you start a game:** on the file select screen, open Options and move down to Performance. Move the stick left or right to change it. Anti-aliasing is the next row down.
-- **During a game:** press Start, then B, move the stick down to Options, and press A. Move to a row and press A. The last row switches Anti-aliasing. Changes take effect when the pause menu closes.
+- **During a game:** press Start, then B, move the stick down to Options, and press A. Move to a row and press A to choose it. The last row switches Anti-aliasing. Press B to return. Changes take effect when the pause menu closes.
 
 The game remembers your settings.
 
@@ -59,12 +59,18 @@ On an overclocked FPGA N64, Reduced anti-aliasing gave about 5 to 6 fps more in 
 
 ## Known limits
 
-- The Z-targeting letterbox bars step at the game's update rate.
-- Some motion can look stepped at high frame rates: horses' legs, the Z-targeting triangles, the start of a thrown cuckoo's arc, and the fade when you enter a house.
+- Some motion can still look stepped at high frame rates: the start of a thrown cuckoo's arc, the Biri jellyfish's tentacles, the wobble of the rooms inside Jabu-Jabu's Belly, Barinade's electricity, and the slow drift of some water textures.
 - Sword trails and some effects update at 20 per second.
 - The patch is tested on an FPGA N64 and an original N64, each with a flash cart, and in the ares emulator.
 
 ## Changes
+
+**v0.3.0**
+
+- In the pause menu's Options card, A chooses a row and the card stays open. B returns. The card now covers the whole save page.
+- Smoother at high frame rates: horses, the Z-targeting triangles and the arrow over a target, the Z-targeting letterbox bars, the fade when you enter a house, the wipe between some scenes, and moving textures such as water, waterfalls, lava and torch flames.
+- The fade when you enter a house now also covers the corners of the screen. The original game leaves them uncovered, and modern displays show them.
+- Opening the pause menu no longer flashes garbage at the top of the screen.
 
 **v0.2.0**
 
