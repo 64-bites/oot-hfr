@@ -21,13 +21,13 @@ To use your own patcher, take the BPS file from the Releases page and apply it t
 
 ## Requirements
 
-- USA 1.0 ROM, MD5 `5bd1fe107bf8106b2ab6650abecd54d6` (`.z64` byte order). The patched ROM has MD5 `0ee4a5956d3330b8e869e11dac76ecbe`.
-- An Expansion Pak for the settings below. Without one, the game runs as Standard with full anti-aliasing, and hides both settings.
+- USA 1.0 ROM, MD5 `5bd1fe107bf8106b2ab6650abecd54d6` (`.z64` byte order). The patched ROM has MD5 `766501aa5007a230983b1a622d01f385`.
+- An Expansion Pak for the settings below. Without one, the game runs as Standard with full anti-aliasing, and hides these settings.
 
 ## Settings
 
-- **Before you start a game:** on the file select screen, open Options and move down to Performance. Move the stick left or right to change it. Anti-aliasing is the next row down.
-- **During a game:** press Start, then B, move the stick down to Options, and press A. Move to a row and press A to choose it. The last row switches Anti-aliasing. Press B to return. Changes take effect when the pause menu closes.
+- **Before you start a game:** on the file select screen, open Options and move down to Performance. Move the stick left or right to change it. Anti-aliasing is the next row down, then Flipbooks.
+- **During a game:** press Start, then B, move the stick down to Options, and press A. Move to a row and press A to choose it. The last two rows switch Anti-aliasing and Flipbook animations. Press B to return. Changes take effect when the pause menu closes.
 
 The game remembers your settings.
 
@@ -42,6 +42,11 @@ The game remembers your settings.
 |---|---|
 | Full | The original edge smoothing. |
 | Reduced | Draws room surfaces faster, with less smoothing on their edges. The higher rates are easier to hold. |
+
+| Flipbook animations | What it does |
+|---|---|
+| Enhanced | Gives effects that the game animates picture by picture, such as explosions, flames and smoke, new in-between pictures at the higher frame rates. Their color fades are smooth too. It also gives the flickering energy balls of Phantom Ganon and Ganondorf a new angle in every picture. |
+| Original | Shows only the game's own pictures. |
 
 ## What to expect
 
@@ -59,11 +64,20 @@ On an overclocked FPGA N64, Reduced anti-aliasing gave about 5 to 6 fps more in 
 
 ## Known limits
 
-- Some motion can still look stepped at high frame rates: the start of a thrown cuckoo's arc, the Biri jellyfish's tentacles, the wobble of the rooms inside Jabu-Jabu's Belly, Barinade's electricity, and the slow drift of some water textures.
-- Sword trails and some effects update at 20 per second.
+- Some motion can still look stepped at high frame rates: the start of a thrown cuckoo's arc, and the slow drift of some water textures.
+- At the fastest point of a sword swing, the blade and its trail move 20 times a second for one game update.
+- In the Fire Temple, the puffs of fire from the flame jets can seem to move back and forth at high frame rates.
+- Some things that the game turns to a random angle at each update keep that flicker at 20 per second, by design, while their movement is smooth: the pieces of a rupee broken in the shooting gallery and, with Flipbook animations set to Original, Phantom Ganon's and Ganondorf's energy balls.
 - The patch is tested on an FPGA N64 and an original N64, each with a flash cart, and in the ares emulator.
 
 ## Changes
+
+**v0.4.0**
+
+- New setting, Flipbook animations, in both Options menus. Enhanced (the default) gives effects that the game animates picture by picture new in-between pictures at the higher frame rates: explosions, flames, smoke, hit sparks, dust, Barinade's electricity, the Biri jellyfish's tentacles, the lava in Dodongo's Cavern and more. Their color fades are smooth too. Enhanced also gives the flickering energy balls of Phantom Ganon and Ganondorf a new angle in every picture. Original shows only the game's own pictures.
+- Sword trails now grow with the blade instead of reaching ahead of it. The same holds for arrows, the boomerang and the weapons of enemies such as Stalfos, Lizalfos and Iron Knuckles.
+- Smoother at high frame rates: the boomerang, the hookshot's chain, Phantom Ganon's and Ganondorf's energy balls, the light around a new sage, the flames in the Deku Tree Sprout's story, the walls inside Jabu-Jabu's Belly, the waterfall under King Zora, rolling Gorons, the pieces of a rupee broken in the shooting gallery, Freezards, Morpha's core, Volvagia's mane, and the fishing rod, lure and line.
+- The pause menu's item cursor shows again. In v0.3.0 it could be missing.
 
 **v0.3.0**
 
