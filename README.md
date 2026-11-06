@@ -21,7 +21,7 @@ To use your own patcher, take the BPS file from the Releases page and apply it t
 
 ## Requirements
 
-- USA 1.0 ROM, MD5 `5bd1fe107bf8106b2ab6650abecd54d6` (`.z64` byte order). The patched ROM has MD5 `766501aa5007a230983b1a622d01f385`.
+- USA 1.0 ROM, MD5 `5bd1fe107bf8106b2ab6650abecd54d6` (`.z64` byte order). The patched ROM has MD5 `a7a3528afce3d04a36534a9854ae343e`.
 - An Expansion Pak for the settings below. Without one, the game runs as Standard with full anti-aliasing, and hides these settings.
 
 ## Settings
@@ -66,11 +66,21 @@ On an overclocked FPGA N64, Reduced anti-aliasing gave about 5 to 6 fps more in 
 
 - Some motion can still look stepped at high frame rates: the start of a thrown cuckoo's arc, and the slow drift of some water textures.
 - At the fastest point of a sword swing, the blade and its trail move 20 times a second for one game update.
-- In the Fire Temple, the puffs of fire from the flame jets can seem to move back and forth at high frame rates.
+- When Volvagia comes out of the lava, its large clouds of fire can drop the rate to 20 fps for a second or two. At high frame rates, the console must draw these clouds more often than the original game does.
+- During the Song of Storms, the color fade of the layer over the screen changes 20 times a second.
 - Some things that the game turns to a random angle at each update keep that flicker at 20 per second, by design, while their movement is smooth: the pieces of a rupee broken in the shooting gallery and, with Flipbook animations set to Original, Phantom Ganon's and Ganondorf's energy balls.
 - The patch is tested on an FPGA N64 and an original N64, each with a flash cart, and in the ares emulator.
 
 ## Changes
+
+**v0.5.0**
+
+- Fixes characters, enemies and chests that could fail to appear in busy rooms. In the Fire Temple, this could leave a room's doors shut. With an Expansion Pak, the game now gives them a much larger block of memory.
+- The effects of the songs are smooth at high frame rates: the Song of Time's blue vignette, and the effects of Epona's Song, Saria's Song, Scarecrow's Song, the Song of Storms and the Sun's Song.
+- In the Fire Temple, the puffs of fire from the flame jets and the fireballs of the moving fire platform no longer move back and forth.
+- The Great Fairy's sparkles are smooth at high frame rates.
+- Smoother at high frame rates: the Poe Sisters' torches and flame trails, the fireballs of Anubis, the glow of the light that the Mirror Shield reflects, and the floor tiles that fall in Ganondorf's fight.
+- Fixes a rare fault: when the game skipped drawing an update because its drawing memory was full, the next pictures could use old data.
 
 **v0.4.0**
 
