@@ -21,6 +21,10 @@ input[type=file] { position: absolute; opacity: 0; width: 1px; height: 1px; }
 #status.ok { color: var(--ok); }
 #status.bad { color: var(--bad); }
 ul { margin: 0; padding-left: 20px; }
+label.option { display: flex; gap: 10px; align-items: baseline; margin: 8px 0 0; cursor: pointer; }
+label.option input { flex: none; }
+label.option span.muted { display: block; }
+#result { margin: 12px 0 0; overflow-wrap: anywhere; }
 a { color: var(--accent); }
 </style>
 </head>
@@ -28,8 +32,15 @@ a { color: var(--accent); }
 <main>
 <h1>OoT HFR Patcher</h1>
 <p>Runs Ocarina of Time at 20, up to 30 or up to 60 fps on N64 hardware, with game speed unchanged. You choose the rate on the file select screen or in the pause menu.</p>
+<p class="muted">Choose your options, then your ROM. The page makes one patched ROM with everything you chose.</p>
 <div class="panel">
-<label class="pick">Choose your USA 1.0 ROM (.z64, .n64 or .v64)<input type="file" id="rom" accept=".z64,.n64,.v64"></label>
+<strong>1. Choose your options</strong>
+<div id="options"></div>
+<p class="muted" id="result"></p>
+</div>
+<div class="panel">
+<strong>2. Choose your ROM</strong>
+<label class="pick" style="margin-top: 12px">Choose your USA 1.0 ROM (.z64, .n64 or .v64)<input type="file" id="rom" accept=".z64,.n64,.v64"></label>
 <div id="status" role="status">Your ROM stays on this computer. Nothing is uploaded.</div>
 </div>
 <div class="panel">
@@ -37,16 +48,17 @@ a { color: var(--accent); }
 <ul>
 <li>Your own ROM of the USA 1.0 version. No ROM comes with this patch.</li>
 <li>A flash cart or an emulator to run the result.</li>
-<li>An Expansion Pak for any rate above Standard. Without one, the game runs as Standard.</li>
+<li>An Expansion Pak. Without one, the game shows a notice and does not start.</li>
 </ul>
 </div>
-<p class="muted">Rates depend on your console and the scene. The higher rates are for overclocked hardware. At stock speed, expect mostly 20 fps. This is a fan project, not affiliated with Nintendo. Patching uses <a href="vendor/LICENSE-RomPatcher">Rom Patcher JS modules</a>.</p>
+<p class="muted">Rates depend on your console and the scene. The higher rates are for overclocked hardware. At stock speed, expect mostly 20 fps. This is a fan project, not affiliated with Nintendo. Patching uses <a href="vendor/LICENSE-RomPatcher">Rom Patcher JS modules</a>. Made with <a href="https://claude.com/claude-code">Claude Code</a>.</p>
 </main>
 <script src="vendor/HashCalculator.js"></script>
 <script src="vendor/BinFile.js"></script>
 <script src="vendor/RomPatcher.format.vcdiff.js"></script>
-<script src="hfr-config.js"></script>
-<script src="hfr-install.js"></script>
+<!-- The version query makes a browser fetch this version's own files, not older cached ones. Change it with each release. -->
+<script src="hfr-config.js?v=0.6.0"></script>
+<script src="hfr-install.js?v=0.6.0"></script>
 <script>
 (function () {
 	const status = document.getElementById('status');
@@ -64,16 +76,53 @@ a { color: var(--accent); }
 		a.remove();
 		setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
 	};
-	// The single-file build holds the patch in the page
-	const loadPatch = async function () {
-		if (typeof HFR_PATCH_BASE64 === 'string') {
-			const text = atob(HFR_PATCH_BASE64);
+	// One checkbox for each option of hfr-config.js. The patch for the chosen combination is applied in one step.
+	const optionsBox = document.getElementById('options');
+	const result = document.getElementById('result');
+	const chosen = function () {
+		return HFR_CONFIG.options.filter(function (o) { return document.getElementById('option-' + o.id).checked; }).map(function (o) { return o.id; });
+	};
+	const describe = function () {
+		try {
+			const build = HfrInstall.pickBuild(HFR_CONFIG, chosen());
+			result.textContent = 'You get ' + build.outputName + ' (' + HFR_CONFIG.version + '), MD5 ' + build.targetMd5 + '.';
+		} catch (err) {
+			result.textContent = err.message;
+		}
+	};
+	HFR_CONFIG.options.forEach(function (o) {
+		const label = document.createElement('label');
+		const box = document.createElement('input');
+		const text = document.createElement('span');
+		const name = document.createElement('strong');
+		const note = document.createElement('span');
+
+		label.className = 'option';
+		box.type = 'checkbox';
+		box.id = 'option-' + o.id;
+		box.addEventListener('change', describe);
+		name.textContent = o.label;
+		note.className = 'muted';
+		note.textContent = o.description;
+		text.appendChild(name);
+		text.appendChild(note);
+		label.appendChild(box);
+		label.appendChild(text);
+		optionsBox.appendChild(label);
+	});
+	if (HFR_CONFIG.options.length === 0)
+		optionsBox.textContent = 'This version has no options.';
+	describe();
+	const loadPatch = async function (build) {
+		// A single-file build of the page holds the patches in the page, by file name
+		if (typeof HFR_PATCHES_BASE64 === 'object' && typeof HFR_PATCHES_BASE64[build.patch] === 'string') {
+			const text = atob(HFR_PATCHES_BASE64[build.patch]);
 			const bytes = new Uint8Array(text.length);
 			for (let i = 0; i < text.length; i++)
 				bytes[i] = text.charCodeAt(i);
 			return bytes;
 		}
-		const response = await fetch('hfr.xdelta');
+		const response = await fetch(build.patch + '?v=' + encodeURIComponent(HFR_CONFIG.version));
 		if (!response.ok)
 			throw new HfrInstall.InstallError('NO_PATCH', 'The patch file could not be loaded. Please try again.');
 		return new Uint8Array(await response.arrayBuffer());
@@ -86,15 +135,18 @@ a { color: var(--accent); }
 		show('Checking and patching. This takes a few seconds.');
 		await new Promise(function (resolve) { setTimeout(resolve, 30); });
 		try {
+			const build = HfrInstall.pickBuild(HFR_CONFIG, chosen());
 			const romBytes = new Uint8Array(await file.arrayBuffer());
-			const patchBytes = await loadPatch();
-			const result = HfrInstall.install(romBytes, patchBytes, HFR_CONFIG.targetMd5, { BinFile, VCDIFF });
+			const patchBytes = await loadPatch(build);
+			const patched = HfrInstall.install(romBytes, patchBytes, build.targetMd5, { BinFile, VCDIFF });
 
-			save(result.rom, HFR_CONFIG.outputName);
-			show('Done. Your browser saved ' + HFR_CONFIG.outputName + '. Your original file was not changed.', 'ok');
+			save(patched.rom, build.outputName);
+			show('Done. Your browser saved ' + build.outputName + '. Your original file was not changed.', 'ok');
 		} catch (err) {
 			show(err instanceof HfrInstall.InstallError ? err.message : 'Something went wrong: ' + err.message, 'bad');
 		}
+		// The same file can be chosen again, for another choice of options
+		event.target.value = '';
 	});
 })();
 </script>

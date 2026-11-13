@@ -65,7 +65,34 @@
 		return { rom: patched._u8array, byteOrder: order };
 	};
 
-	const api = { SOURCE_MD5, InstallError, detectByteOrder, toZ64, install };
+	/* The options a player can choose are config.options, in order. config.builds holds one build (patch file, MD5 of
+	   the result, name of the saved file) for each combination of options. A combination's key is the ids of its
+	   chosen options, in the order of config.options, joined by '+'. The key of "no option" is ''. */
+	const comboKey = function (config, chosenIds) {
+		return config.options.map(function (o) { return o.id; }).filter(function (id) { return chosenIds.indexOf(id) >= 0; }).join('+');
+	};
+
+	/* Every combination's key: 2 to the power of the number of options. */
+	const allKeys = function (config) {
+		let keys = [[]];
+
+		config.options.forEach(function (o) {
+			keys = keys.concat(keys.map(function (k) { return k.concat([o.id]); }));
+		});
+		return keys.map(function (k) { return comboKey(config, k); });
+	};
+
+	/* Returns the build for the chosen options, or throws InstallError. */
+	const pickBuild = function (config, chosenIds) {
+		const known = config.options.map(function (o) { return o.id; });
+		const key = comboKey(config, chosenIds);
+
+		if (chosenIds.some(function (id) { return known.indexOf(id) < 0; }) || !Object.prototype.hasOwnProperty.call(config.builds, key))
+			throw new InstallError('NO_BUILD', 'This choice of options has no patch. Please report this.');
+		return config.builds[key];
+	};
+
+	const api = { SOURCE_MD5, InstallError, detectByteOrder, toZ64, install, comboKey, allKeys, pickBuild };
 
 	if (typeof module !== 'undefined' && module.exports)
 		module.exports = api;
